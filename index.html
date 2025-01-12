@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcards</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .card {
+            position: relative;
+            width: 90%;
+            max-width: 300px;
+            height: 200px;
+            perspective: 1000px;
+        }
+
+        .card-inner {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            cursor: pointer;
+        }
+
+        .card.is-flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-front,
+        .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5em;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+
+        .card-front {
+            background-color: #ffffff;
+        }
+
+        .card-back {
+            background-color: #007BFF;
+            color: #ffffff;
+            transform: rotateY(180deg);
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 5px;
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+            width: 90%;
+            max-width: 300px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        @media (max-height: 500px) {
+            .card {
+                height: 150px;
+            }
+
+            button {
+                font-size: 0.9em;
+                padding: 8px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="card" onclick="flipCard()">
+            <div class="card-inner">
+                <div class="card-front" id="front">Čeština</div>
+                <div class="card-back" id="back">Italština</div>
+            </div>
+        </div>
+        <button onclick="nextCard()">Další kartička</button>
+    </div>
+
+    <script>
+        const words = [
+  { front: "lentissimo", back: "co nejpomaleji" },
+  { front: "adagissimo", back: "velmi volně" },
+  { front: "grave", back: "vážně, těžce" },
+  { front: "largo", back: "široce" },
+  { front: "lento", back: "rozvážně, zdlouha" },
+  { front: "adagio", back: "pomalu, zvolna" },
+  { front: "larghetto", back: "poněkud široce" },
+  { front: "andante", back: "volně krokem" },
+  { front: "andantino", back: "poněkud volně, trochu rychleji než andante" },
+  { front: "sostenuto", back: "zadržované" },
+  { front: "commodo", back: "pohodlně" },
+  { front: "maestoso", back: "důstojně, velebně, majestátně" },
+  { front: "accompagnamento", back: "doprovod" },
+  { front: "adztato", back: "vzrušeně" },
+  { front: "animato", back: "živě, rušně" },
+  { front: "archi", back: "smyčce (v orchestru ve smyslu smyčcového nástroje)" },
+  { front: "arpeggio", back: "rozložené hraní akordů" },
+  { front: "bacchetta", back: "taktovka, palička do bicích nástrojů" },
+  { front: "bequadro", back: "odrážka" },
+  { front: "bisbigliaré", back: "šeptat" },
+  { front: "braccio", back: "paže, rámě" },
+  { front: "calízone", back: "zvonková hra" },
+  { front: "ciaccona", back: "starý tanec, též jedna z polyfonních forem" },
+  { front: "dolce", back: "sladce, jemně" },
+  { front: "con dolore", back: "žalostivě, se žalem" },
+  { front: "energico", back: "energicky" },
+  { front: "risoluto", back: "rozhodně" },
+  { front: "espressivo", back: "výrazně, bohatýrsky" },
+  { front: "feroce", back: "divoce, bouřlivě" },
+  { front: "giocoso", back: "žertovně" },
+  { front: "giulioso", back: "radostně" },
+  { front: "grandioso", back: "velkolepě, nádherně" },
+  { front: "innocente", back: "půvabně, nevinně" },
+  { front: "lamentoso", back: "neklidně" },
+  { front: "leggiero", back: "lehce, hravě, perlivě" },
+  { front: "misterioso", back: "tajemně" },
+  { front: "morendo", back: "zmíravě, zhasínavě" },
+  { front: "patetico", back: "ušlechtile, na způsobu mluvy" },
+  { front: "pesante", back: "závazně, těžce" },
+  { front: "religioso", back: "povzneseně, pateticky" },
+  { front: "semplice", back: "prostě, jednoduše" },
+  { front: "scherzoso", back: "žertovně" },
+  { front: "sonoro, sonoramente", back: "zvučně" },
+  { front: "tempestoso", back: "bouřlivě" },
+  { front: "tranquillo, quieto", back: "klidně, pokojně" },
+  { front: "triste", back: "smutně" },
+  { front: "il basso", back: "bas" },
+  { front: "ben marcato il basso", back: "dobře označený bas" },
+  { front: "adolorato", back: "bolestně, žalně" },
+  { front: "affettuoso, con affetto", back: "milostně, láskyplně, vroucně" },
+  { front: "agitato", back: "náruživě, vášnivě" },
+  { front: "alla marcia", back: "pochodem, tempem pochodu" },
+  { front: "amoroso", back: "milostně" },
+  { front: "assai", back: "velmi" },
+  { front: "burlesco", back: "humorně" },
+  { front: "con brio", back: "s jiskrou, živě" },
+  { front: "con spirito", back: "živě, energicky" },
+  { front: "moderato", back: "mírně" },
+  { front: "allegretto", back: "poněkud vesele, méně rychle než allegro" },
+  { front: "allegro", back: "rychle" },
+  { front: "vivace", back: "velmi rychle" },
+  { front: "presto", back: "co nejrychleji" },
+  { front: "prestissimo", back: "extrémně rychle" },
+  { front: "ppp (pianissimo)", back: "co nejslaběji" },
+  { front: "pp (piano)", back: "velmi slabě" },
+  { front: "mp (mezzo piano)", back: "středně slabě" },
+  { front: "mf (mezzo forte)", back: "středně silně" },
+  { front: "f (forte)", back: "silně" },
+  { front: "ff (fortissimo)", back: "velmi silně" },
+  { front: "crescendo", back: "zesilovat" },
+  { front: "decrescendo/diminuendo", back: "zeslabovat" },
+  { front: "divisi", back: "rozdvojeně" },
+  { front: "esclusivo", back: "výlučně" },
+  { front: "gagliarda", back: "statný tanec" },
+  { front: "grottesco", back: "hravě, živě, přehnaně" },
+  { front: "legno", back: "dřevo" },
+  { front: "ossia", back: "jinak" },
+  { front: "pizzicato", back: "brnkání na struny" },
+  { front: "sciolto", back: "volně" },
+  { front: "sordinamente", back: "s tlumením" },
+  { front: "zoppo", back: "chromě" },
+  { front: "poco a poco animato", back: "oživovat více a více" },
+  { front: "stringendo", back: "naléhavě, zrychlovat" },
+  { front: "ritardando (rit.)", back: "postupně zpomalovat" },
+  { front: "diminuedo", back: "zeslabovat" }
+]
+;
+
+
+        let currentIndex = 0;
+
+        function updateCard() {
+            const front = document.getElementById('front');
+            const back = document.getElementById('back');
+            front.textContent = words[currentIndex].front;
+            back.textContent = words[currentIndex].back;
+        }
+
+        function flipCard() {
+            const card = document.querySelector('.card');
+            card.classList.toggle('is-flipped');
+        }
+
+        function nextCard() {
+            const card = document.querySelector('.card');
+            if (card.classList.contains('is-flipped')) {
+                card.classList.remove('is-flipped');
+            }
+            currentIndex = Math.floor(Math.random() * words.length);
+            updateCard();
+        }
+
+        // Initialize first card
+        updateCard();
+    </script>
+</body>
+</html>
